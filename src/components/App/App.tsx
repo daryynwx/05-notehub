@@ -24,8 +24,7 @@ const App: React.FC = () => {
     queryFn: () => fetchNotes(page, search),
     placeholderData: (prev) => prev,
   });
-    
-    
+
   const createMutation = useMutation({
     mutationFn: createNote,
     onSuccess: () => {
@@ -42,7 +41,6 @@ const App: React.FC = () => {
       }
     },
   });
-  
 
   const deleteMutation = useMutation({
     mutationFn: deleteNote,
@@ -59,15 +57,13 @@ const App: React.FC = () => {
   const handleSubmit = (vals: { title: string; content: string; tag: string }) => {
     const newNote = {
       title: vals.title,
-      content: vals.content,  // <-- здесь исправлено с text на content
+      content: vals.content,  // обязательно "content", а не "text"
       tag: vals.tag as Note['tag'],
     };
   
     console.log('📤 Отправляем:', newNote);
     createMutation.mutate(newNote);
   };
-  
-  
 
   const handleDelete = (id: string) => {
     deleteMutation.mutate(id);
@@ -78,7 +74,11 @@ const App: React.FC = () => {
       <header className={css.toolbar}>
         <SearchBox onSearch={handleSearch} />
         {!!data?.totalPages && data.totalPages > 1 && (
-        <Pagination pageCount={data.totalPages} onPageChange={setPage} currentPage={page} />
+          <Pagination
+            pageCount={data.totalPages}
+            currentPage={page}
+            onPageChange={setPage}
+          />
         )}
         <button className={css.button} onClick={() => setModalOpen(true)}>
           Create note +

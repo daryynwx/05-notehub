@@ -5,7 +5,7 @@ import css from './Pagination.module.css';
 interface PaginationProps {
   pageCount: number;
   onPageChange: (selectedPage: number) => void;
-  currentPage: number;  // Добавляем сюда текущую страницу
+  currentPage: number;
 }
 
 const Pagination: React.FC<PaginationProps> = ({ pageCount, onPageChange, currentPage }) => {
@@ -27,7 +27,7 @@ const Pagination: React.FC<PaginationProps> = ({ pageCount, onPageChange, curren
       pageCount={pageCount}
       marginPagesDisplayed={2}
       pageRangeDisplayed={3}
-      forcePage={currentPage - 1}  // Вот этот проп говорит ReactPaginate, какая страница активна (нумерация с 0)
+      forcePage={currentPage - 1}  // нумерация с 0 в ReactPaginate
       onPageChange={(e) => onPageChange(e.selected + 1)}
     />
   );
