@@ -50,9 +50,9 @@ const App: React.FC = () => {
   });
 
   const handleSearch = (val: string) => {
-    setPage(1);
     setSearch(val);
   };
+  
 
   const handleSubmit = (vals: { title: string; content: string; tag: string }) => {
     const newNote = {
