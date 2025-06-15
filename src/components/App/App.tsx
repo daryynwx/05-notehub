@@ -9,6 +9,8 @@ import NoteForm from '../NoteForm/NoteForm';
 import { useDebounce } from 'use-debounce';
 import css from './App.module.css';
 
+const limit = 10; // лимит на страницу
+
 const App: React.FC = () => {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
@@ -16,14 +18,25 @@ const App: React.FC = () => {
   const [isModalOpen, setModalOpen] = useState(false);
 
   useEffect(() => {
-    setPage(1); // Скидання сторінки при зміні пошуку
+    setPage(1); 
   }, [debouncedSearch]);
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ['notes', debouncedSearch, page],
-    queryFn: () => fetchNotes(page, debouncedSearch),
-    placeholderData: (prev) => prev,
+    queryFn: () =>
+      fetchNotes({
+        search: debouncedSearch,
+        page,
+        limit,
+      }),
+    placeholderData: {
+      notes: [],
+      total: 0,
+    },
   });
+
+  // Вычисляем количество страниц
+  const totalPages = data ? Math.ceil(data.total / limit) : 0;
 
   const handleSearchChange = (e: ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value);
@@ -33,9 +46,9 @@ const App: React.FC = () => {
     <div className={css.app}>
       <header className={css.toolbar}>
         <SearchBox value={search} onChange={handleSearchChange} />
-        {!!data?.totalPages && data.totalPages > 1 && (
+        {!!totalPages && totalPages > 1 && (
           <Pagination
-            pageCount={data.totalPages}
+            pageCount={totalPages}
             currentPage={page}
             onPageChange={setPage}
           />
