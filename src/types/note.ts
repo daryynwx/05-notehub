@@ -1,12 +1,21 @@
 export interface Note {
-  id: number;
+  id: string;
   title: string;
-  content: string;
-  tag: 'Todo' | 'Work' | 'Personal' | 'Meeting' | 'Shopping';
+  content?: string;
+  tag: 'todo' | 'work' | 'personal' | 'meeting' | 'shopping';
+  createdAt: string;
 }
+
+export type Tag = 'Todo' | 'work' | 'personal' | 'meeting' | 'shopping';
 
 export interface NewNote {
   title: string;
   content: string;
-  tag: 'Todo' | 'Work' | 'Personal' | 'Meeting' | 'Shopping';
+  tag: Tag;
+}
+
+
+export interface NotesResponse {
+  notes: Note[];
+  total: number;
 }
