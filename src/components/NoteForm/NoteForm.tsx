@@ -1,112 +1,81 @@
-import React from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Formik, Form, Field, ErrorMessage } from 'formik';
-import * as Yup from 'yup';
-import { createNote } from '../../services/noteService';
-import type { NewNote, Note } from '../../types/note';
+import React, { useState, type FormEvent } from 'react';
 import css from './NoteForm.module.css';
+import { createNote } from '../../services/noteService'; // импортируем функцию создания заметки
+import { useQueryClient } from '@tanstack/react-query';
 
 interface NoteFormProps {
   onClose: () => void;
 }
 
-const validationSchema = Yup.object({
-  title: Yup.string().required('Title is required'),
-  content: Yup.string(),
-  tag: Yup.mixed<NewNote['tag']>()
-    .oneOf(['Todo', 'work', 'personal', 'meeting', 'shopping'])
-    .required('Tag is required'),
-});
-
 const NoteForm: React.FC<NoteFormProps> = ({ onClose }) => {
+  const [title, setTitle] = useState('');
+  const [content, setContent] = useState('');
+  const [tag, setTag] = useState('Todo');
+
   const queryClient = useQueryClient();
 
-  const mutation = useMutation<Note, Error, NewNote>({
-    mutationFn: createNote,
-    onSuccess: () => {
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    try {
+      await createNote({ title, content, tag });
+      // Правильный вызов invalidateQueries с объектом
       queryClient.invalidateQueries({ queryKey: ['notes'] });
       onClose();
-    },
-  });
+    } catch (error) {
+      console.error('Failed to create note', error);
+    }
+  };
 
   return (
-    <Formik<NewNote>
-      initialValues={{ title: '', content: '', tag: 'Todo' }}
-      validationSchema={validationSchema}
-      onSubmit={(values) => {
-        const noteToSend = {
-          title: values.title.trim(),
-          content: values.content?.trim() || '',
-          tag: values.tag as NewNote['tag'],
-        };
-        mutation.mutate(noteToSend);
-      }}
+    <form className={css.form} onSubmit={handleSubmit}>
+  <div className={css.formGroup}>
+    <label htmlFor="title">Title</label>
+    <input
+      id="title"
+      value={title}
+      onChange={(e) => setTitle(e.target.value)}
+      required
+      className={css.input}
+    />
+  </div>
+
+  <div className={css.formGroup}>
+    <label htmlFor="content">Content</label>
+    <textarea
+      id="content"
+      value={content}
+      onChange={(e) => setContent(e.target.value)}
+      required
+      className={css.textarea}
+    />
+  </div>
+
+  <div className={css.formGroup}>
+    <label htmlFor="tag">Tag</label>
+    <select
+      id="tag"
+      value={tag}
+      onChange={(e) => setTag(e.target.value)}
+      className={css.select}
     >
-      {({ isSubmitting }) => (
-        <Form className={css.form}>
-          <div className={css.formGroup}>
-            <label htmlFor="title">Title</label>
-            <Field
-              id="title"
-              name="title"
-              type="text"
-              disabled={mutation.isPending || isSubmitting}
-              className={css.input}
-            />
-            <ErrorMessage name="title" component="div" className={css.error} />
-          </div>
+      <option value="Todo">Todo</option>
+      <option value="Work">Work</option>
+      <option value="Personal">Personal</option>
+      <option value="Meeting">Meeting</option>
+      <option value="Shopping">Shopping</option>
+    </select>
+  </div>
 
-          <div className={css.formGroup}>
-            <label htmlFor="content">Content</label>
-            <Field
-              id="content"
-              name="content"
-              as="textarea"
-              disabled={mutation.isPending || isSubmitting}
-              className={css.textarea}
-            />
-            <ErrorMessage name="content" component="div" className={css.error} />
-          </div>
+  <div className={css.actions}>
+    <button type="button" className={css.cancelButton} onClick={onClose}>
+      Cancel
+    </button>
+    <button type="submit" className={css.submitButton}>
+      Save Note
+    </button>
+  </div>
+</form>
 
-          <div className={css.formGroup}>
-            <label htmlFor="tag">Tag</label>
-            <Field
-              id="tag"
-              name="tag"
-              as="select"
-              disabled={mutation.isPending || isSubmitting}
-              className={css.select}
-            >
-              <option value="Todo">Todo</option>
-              <option value="work">Work</option>
-              <option value="personal">Personal</option>
-              <option value="meeting">Meeting</option>
-              <option value="shopping">Shopping</option>
-            </Field>
-            <ErrorMessage name="tag" component="div" className={css.error} />
-          </div>
-
-          <div className={css.actions}>
-            <button
-              type="submit"
-              disabled={mutation.isPending || isSubmitting}
-              className={css.submitButton}
-            >
-              {mutation.isPending || isSubmitting ? 'Saving...' : 'Save'}
-            </button>
-
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={mutation.isPending || isSubmitting}
-              className={css.cancelButton}
-            >
-              Cancel
-            </button>
-          </div>
-        </Form>
-      )}
-    </Formik>
   );
 };
 
