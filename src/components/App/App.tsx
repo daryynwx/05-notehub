@@ -1,8 +1,8 @@
 import React, { useState, useEffect, type ChangeEvent } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 
-import { fetchNotes, deleteNote } from '../../services/noteService';
-import type { NotesResponse } from '../../types/note';
+import { fetchNotes } from '../../services/noteService';
+import type { NotesResponse } from '../../services/noteService';
 
 import SearchBox from '../SearchBox/SearchBox';
 import NoteList from '../NoteList/NoteList';
@@ -13,6 +13,7 @@ import Loader from '../Loader/Loader';
 import ErrorMessage from '../ErrorMessage/ErrorMessage';
 
 import { useDebounce } from 'use-debounce';
+import { keepPreviousData } from '@tanstack/react-query';
 
 import css from './App.module.css';
 
@@ -22,8 +23,6 @@ const App: React.FC = () => {
   const [debouncedSearch] = useDebounce(search, 500);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const queryClient = useQueryClient();
-
   useEffect(() => {
     setPage(1);
   }, [debouncedSearch]);
@@ -31,6 +30,7 @@ const App: React.FC = () => {
   const query = useQuery<NotesResponse, Error>({
     queryKey: ['notes', debouncedSearch, page],
     queryFn: () => fetchNotes(debouncedSearch, page),
+    placeholderData: keepPreviousData,
   });
 
   const data = query.data;
@@ -43,15 +43,6 @@ const App: React.FC = () => {
 
   const handlePageChange = (selectedPage: number) => {
     setPage(selectedPage);
-  };
-
-  const handleDeleteNote = async (id: string) => {
-    try {
-      await deleteNote(id);
-      queryClient.invalidateQueries({ queryKey: ['notes'] });
-    } catch (error) {
-      console.error('Failed to delete note:', error);
-    }
   };
 
   return (
@@ -74,9 +65,7 @@ const App: React.FC = () => {
       {query.isError && <ErrorMessage />}
       {!query.isLoading && notes.length === 0 && <p>No notes found.</p>}
 
-      {notes.length > 0 && (
-        <NoteList notes={notes} onDelete={handleDeleteNote} />
-      )}
+      {notes.length > 0 && <NoteList notes={notes} />}
 
       {isModalOpen && (
         <NoteModal onClose={() => setIsModalOpen(false)}>
